@@ -1,63 +1,51 @@
 ﻿<script lang="ts" setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { type CalendarEvent, parseGoogleCalendarIcs } from '@/lib/googleCalendar'
 
 defineOptions({ name: 'UpcomingEvents' })
 
-const eventData = ref([
-  {
-    title: 'Annual Club Garden Tour & Open House',
-    date: 'July 19, 2026',
-    time: '10:00 AM - 4:30 PM',
-    location: 'Various Member Layouts, Calgary Area',
-    description:
-      'Our hallmark summer event! Hop between multiple breathtaking backyard garden layouts to see large-scale trains winding through real rock waterfalls, bridges, and living miniature alpine flora. The tour wraps up with an evening family social.',
-    highlight: true,
-  },
-  {
-    title: 'Supertrain Exhibition Preparation Layout',
-    date: 'August 15, 2026',
-    time: '9:00 AM - 3:00 PM',
-    location: 'Club Workshop, Calgary',
-    description:
-      'Work party session focused on electrical testing, modular base wiring, and scenery tuning for our upcoming public convention tracks. Bring your troubleshooting eyes and any rolling stock you want track-tested.',
-  },
-  {
-    title: 'Fall General Kickoff Meeting',
-    date: 'September 17, 2026',
-    time: '7:15 PM - 9:00 PM',
-    location: '2715 Dovely Park SE, Calgary',
-    description:
-      'Welcome back meeting for the fall modeling season. We will be sharing layout construction logs from over the summer, discussing new 3D printing design techniques, and scheduling our holiday display workshops.',
-    highlight: false,
-  },
-  {
-    title: 'Holiday ZooLights Setup Workshop',
-    date: 'November 07, 2026',
-    time: '10:00 AM - 2:00 PM',
-    location: 'Calgary Zoo, AB',
-    description:
-      'Initial construction and track-laying session for our famous winter display at ZooLights. Volunteers are needed to assemble weather-resistant town layouts and run power conduits.',
-  },
-])
+const eventData = ref<CalendarEvent[]>([])
 
 const upcomingEvents = computed(() => {
-  return eventData.value.filter((event) => {
-    const eventDateObj = new Date(event.date)
-    eventDateObj.setHours(23, 59, 59, 999)
-    return eventDateObj >= new Date()
-  })
+  return eventData.value
+})
+
+const calendarFeedUrl = '/calendar-ics'
+
+const loadCalendarEvents = async () => {
+  if (!calendarFeedUrl) {
+    return
+  }
+
+  const response = await fetch(calendarFeedUrl)
+  const ics = await response.text()
+  eventData.value = parseGoogleCalendarIcs(ics)
+}
+
+onMounted(() => {
+  void loadCalendarEvents()
+})
+
+defineExpose({
+  eventData,
+  upcomingEvents,
 })
 </script>
 
 <template>
-  <v-container class="py-12 px-4 bg-background" fluid>
-    <v-row justify="center" no-gutters>
-      <v-col class="bg-surface pa-6 rounded-t-lg" cols="12">
+  <v-container class="pa-8 bg-background" fluid style="width: 1650px">
+    <v-row no-gutters>
+      <v-col class="bg-surface pa-4 rounded-t-lg" cols="12">
         <v-card class="w-100 bg-surface" flat>
-          <v-card-item class="pa-0">
-            <v-card-title class="text-h4 font-weight-black text-primary pa-0">
-              Upcoming Club Events.
+          <v-card-item>
+            <v-card-title class="text-h4 font-weight-black text-primary">
+              Upcoming Events
             </v-card-title>
+            <v-card-subtitle class="pa-0 mt-2 text-body-2 text-medium-emphasis">
+              <a class="subscribe-link" :href="calendarFeedUrl" rel="noopener noreferrer" target="_blank">
+                Subscribe to this calendar
+              </a>
+            </v-card-subtitle>
           </v-card-item>
         </v-card>
       </v-col>
@@ -65,60 +53,72 @@ const upcomingEvents = computed(() => {
       <v-col class="bg-primary pa-6 pa-sm-12 rounded-b-lg" cols="12">
         <v-card class="w-100 text-surface" color="transparent" flat>
           <div v-if="upcomingEvents.length === 0" class="text-center py-12 opacity-70">
-            <v-icon class="mb-2 d-block mx-auto" icon="mdi-calendar-blank" size="large"></v-icon>
             <div class="text-h6 font-weight-light">No upcoming events scheduled right now.</div>
             <div class="text-body-2 opacity-80 mt-1">
               Check back soon or send us a message via our contact page!
             </div>
           </div>
 
-          <div v-for="(event, index) in upcomingEvents" :key="index">
-            <v-row align="start" class="py-4" justify="space-between">
-              <v-col cols="12" md="3" sm="4">
-                <div class="text-h5 font-weight-bold text-secondary mb-1">
-                  {{ event.date }}
-                </div>
-                <div class="text-body-2 font-weight-light opacity-70">
-                  {{ event.time }}
-                </div>
-              </v-col>
+          <div v-else>
+            <div v-for="(event, index) in upcomingEvents" :key="index">
+              <component
+                :is="event.url ? 'a' : 'div'"
+                :aria-label="event.url ? `Open ${event.title}` : undefined"
+                :class="{ 'event-card--clickable': !!event.url }"
+                :href="event.url || undefined"
+                :rel="event.url ? 'noopener noreferrer' : undefined"
+                :target="event.url ? '_blank' : undefined"
+                class="event-card d-block text-decoration-none text-inherit"
+              >
+                <v-row align="center" class="event-row">
+                  <v-col class="event-meta-col" cols="12" md="2.5" sm="3">
+                    <div class="event-date text-secondary font-weight-bold mb-1">
+                      {{ event.date }}
+                    </div>
+                    <div class="event-time text-body-1 font-weight-light opacity-80">
+                      {{ event.time }}
+                    </div>
+                  </v-col>
 
-              <v-col class="pt-2 pt-sm-0" cols="12" md="8" sm="8">
-                <div class="d-flex align-center flex-wrap gap-2 mb-2">
-                  <h3 class="text-h5 font-weight-bold tracking-tight">{{ event.title }}</h3>
+                  <v-col cols="12" md="8" sm="9">
+                    <div class="d-flex align-center flex-wrap gap-2 mb-1">
+                      <h3 class="event-title text-h5 font-weight-bold tracking-tight">
+                        {{ event.title }}
+                      </h3>
+                    </div>
+                    <div class="event-location text-body-1 opacity-80 font-weight-light">
+                      {{ event.location }}
+                    </div>
+                    <p
+                      v-if="event.description"
+                      class="body-copy text-body-1 font-weight-light opacity-90"
+                    >
+                      {{ event.description }}
+                    </p>
+                  </v-col>
 
-                  <v-chip
-                    v-if="event.highlight"
-                    class="font-weight-bold ms-sm-3 px-2 rounded-sm"
-                    color="secondary"
-                    size="x-small"
-                    variant="flat"
+                  <v-col
+                    class="d-flex align-center justify-end event-action-col"
+                    cols="12"
+                    md="1"
+                    sm="3"
                   >
-                    FEATURED
-                  </v-chip>
-                </div>
+                    <v-icon
+                      v-if="event.url"
+                      class="event-title-icon text-secondary"
+                      icon="mdi-open-in-new"
+                      size="32"
+                    ></v-icon>
+                  </v-col>
+                </v-row>
+              </component>
 
-                <div class="d-flex align-center text-body-2 opacity-70 mb-4 font-weight-light">
-                  <v-icon
-                    class="me-1 opacity-60"
-                    color="secondary"
-                    icon="mdi-map-marker-outline"
-                    size="small"
-                  ></v-icon>
-                  {{ event.location }}
-                </div>
-
-                <p class="text-body-1 font-weight-light opacity-90">
-                  {{ event.description }}
-                </p>
-              </v-col>
-            </v-row>
-
-            <v-divider
-              v-if="index < upcomingEvents.length - 1"
-              class="my-6 opacity-10"
-              color="surface"
-            ></v-divider>
+              <v-divider
+                v-if="index < upcomingEvents.length - 1"
+                class="my-6 opacity-10"
+                color="surface"
+              ></v-divider>
+            </div>
           </div>
         </v-card>
       </v-col>
@@ -127,13 +127,62 @@ const upcomingEvents = computed(() => {
 </template>
 
 <style scoped>
-p {
-  line-height: 1.6 !important;
+.event-date {
+  letter-spacing: 0.04em;
+  font-size: 1.125rem;
 }
-.tracking-tight {
-  letter-spacing: -0.01em !important;
+
+.event-time,
+.event-location,
+.event-title {
+  line-height: 1.35;
 }
-.gap-2 {
-  gap: 8px;
+
+.event-meta-col {
+  max-width: 300px;
+}
+
+.event-action-col {
+  min-width: 44px;
+  min-height: 100%;
+}
+
+.event-card {
+  color: inherit;
+  border-radius: 16px;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.event-card--clickable:hover {
+  background-color: rgba(var(--v-theme-primary), 0.04);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.event-card--clickable:focus-visible {
+  outline: 2px solid rgba(var(--v-theme-primary), 0.55);
+  outline-offset: 3px;
+}
+
+.event-row {
+  padding: 4px 0;
+}
+
+.event-card--clickable .event-row {
+  cursor: pointer;
+}
+
+.event-title-icon {
+  flex: 0 0 auto;
+  opacity: 0.95;
+}
+
+.subscribe-link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
 }
 </style>

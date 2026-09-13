@@ -29,11 +29,11 @@
 
 <script lang="ts" setup>
 const navItems = [
-  { title: 'Home', to: '/' },
   { title: 'About Us', to: '/aboutUs' },
   { title: 'G-Scale Model Railroading', to: '/g-scale' },
   { title: 'Upcoming Events', to: '/events' },
   { title: 'Image Gallery', to: '/gallery' },
+  { title: 'Resources', to: '/resources' },
   { title: 'Contact Us', to: '/contactUs' },
 ]
 </script>
@@ -61,8 +61,8 @@ header {
 }
 
 body {
-  padding: 0 !important;
-  margin: 0 !important;
+  padding: 0;
+  margin: 0;
 }
 </style>
 
