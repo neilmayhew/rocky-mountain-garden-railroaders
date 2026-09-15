@@ -2,13 +2,14 @@ name: Build and deploy site to Pages
 
 on:
   push:
+    branches:
+      - main
+      - staging
+  pull_request:
   workflow_dispatch:
 
-# Allow deployment to GitHub Pages
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
@@ -37,6 +38,12 @@ jobs:
         path: rmgr-vue3/dist
 
   deploy:
+    if: github.ref == 'refs/heads/main'
+
+    permissions:
+      pages: write
+      id-token: write
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
