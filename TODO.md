@@ -1,6 +1,6 @@
 # TODO
 
-* [x] Add images to About us and G-Scale pages
+* [ ] Fix contact us form
 * [ ] Import Images
 * [ ] Import Video
 * [ ] Fix mobile view
