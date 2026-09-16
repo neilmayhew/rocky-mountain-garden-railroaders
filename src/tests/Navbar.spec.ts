@@ -1,9 +1,9 @@
 import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import Navigation from '../components/Navigation.vue'
+import Navbar from '../components/Navbar.vue'
 
-describe('Navigation', () => {
+describe('Navbar', () => {
   const originalInnerWidth = window.innerWidth
 
   beforeEach(() => {
@@ -24,14 +24,13 @@ describe('Navigation', () => {
   it('GIVEN a mobile viewport WHEN the hamburger is clicked THEN the drawer opens', async () => {
     const vuetify = createVuetify()
 
-    const wrapper = mount(Navigation, {
+    const wrapper = mount(Navbar, {
       global: {
         plugins: [vuetify],
       },
     })
 
-    const drawer = wrapper.findComponent({ name: 'VNavigationDrawer' })
-    expect(drawer.exists()).toBe(true)
+    expect((wrapper.vm as unknown as { mobile: boolean }).mobile).toBe(true)
 
     await wrapper.findComponent({ name: 'VBtn' }).trigger('click')
 
@@ -46,7 +45,7 @@ describe('Navigation', () => {
 
     const vuetify = createVuetify()
 
-    const wrapper = mount(Navigation, {
+    const wrapper = mount(Navbar, {
       global: {
         plugins: [vuetify],
       },

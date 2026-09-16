@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <Navigation />
+    <Navbar />
 
     <v-main>
       <router-view v-slot="{ Component }">
@@ -13,7 +13,7 @@
 </template>
 
 <script lang="ts" setup>
-import Navigation from '@/components/Navigation.vue'
+import Navbar from '@/components/Navbar.vue'
 </script>
 
 <style scoped>
