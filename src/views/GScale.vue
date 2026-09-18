@@ -90,25 +90,6 @@ defineOptions({ name: 'GScaleInfo' })
               </p>
             </v-col>
           </v-row>
-
-          <v-divider class="my-8 opacity-10" color="surface"></v-divider>
-
-          <v-row>
-            <v-col cols="12">
-              <div class="text-h5 font-weight-bold mb-2">Want to Learn More?</div>
-              <p class="body-copy text-body-1 font-weight-light opacity-90">
-                For official international modeling standards, track clearances, and code
-                guidelines, explore the comprehensive resources provided by the
-                <a
-                  class="text-secondary font-weight-medium text-decoration-underline"
-                  href="https://www.nmra.org"
-                  rel="noopener"
-                  target="_blank"
-                  >National Model Railroad Association Website</a
-                >.
-              </p>
-            </v-col>
-          </v-row>
         </v-card>
       </v-col>
     </v-row>
